@@ -14,4 +14,4 @@ __pycache__/
 api/data/
 *.sqlite
 *.sqlite-*
-examples/output_synthetic.png
+examples/output_sample.png

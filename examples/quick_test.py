@@ -1,32 +1,33 @@
 """
 Quick-test for GeoImager.
 
-Generates a synthetic slope image (horizontal gradient from fresh green-grey to
-weathered orange-red), sends it to the API, saves the false-colour classification
-output, and prints the grade population.
+Reads the sample slope image (`slope_sample.png`), sends it to the API for
+CIELAB delta-E weathering-grade classification, prints the per-grade
+population, and saves the false-colour output alongside the input.
 
 Usage:
     python examples/quick_test.py
 
 Prerequisites:
-    - Backend running at http://localhost:8787 (see README).
-    - Python 3.9+ with `requests` and `Pillow` installed:
-        pip install requests pillow
+    - Backend API running at http://localhost:8787 (see project README).
+    - Python 3.9+ (no third-party packages required; only the standard library
+      is used).
 
 Expected output:
-    - Prints per-grade percentages (W1..W6).
-    - Writes examples/output_synthetic.png with the false-colour heatmap.
+    - Prints per-grade percentages (W1..WN).
+    - Writes examples/output_sample.png with the false-colour heatmap.
 """
 import base64
-import io
 import json
+import os
 import sys
+import urllib.error
 import urllib.request
 
-from PIL import Image, ImageDraw
-
 API_URL = "http://localhost:8787/methods/geoimager"
-OUTPUT_PATH = "examples/output_synthetic.png"
+HERE = os.path.dirname(os.path.abspath(__file__))
+INPUT_PATH = os.path.join(HERE, "slope_sample.png")
+OUTPUT_PATH = os.path.join(HERE, "output_sample.png")
 
 # Default colour scheme from the frontend (RGBA rows, W1 freshest .. W6 most weathered).
 DEFAULT_COLOR_SCHEME = [
@@ -41,25 +42,14 @@ DEFAULT_COLOR_SCHEME = [
 ]
 
 
-def make_synthetic_slope(width: int = 512, height: int = 256) -> bytes:
-    """Horizontal gradient: greyish-green (fresh) -> orange-red (weathered)."""
-    img = Image.new("RGB", (width, height))
-    draw = ImageDraw.Draw(img)
-    for x in range(width):
-        t = x / (width - 1)
-        r = int(90 + (200 - 90) * t)
-        g = int(110 + (90 - 110) * t)
-        b = int(85 + (60 - 85) * t)
-        draw.line([(x, 0), (x, height)], fill=(r, g, b))
-    buf = io.BytesIO()
-    img.save(buf, format="PNG")
-    return buf.getvalue()
-
-
 def main() -> int:
-    print("Generating synthetic slope image ...")
-    png_bytes = make_synthetic_slope()
-    b64 = base64.b64encode(png_bytes).decode("ascii")
+    if not os.path.exists(INPUT_PATH):
+        print(f"ERROR: sample image not found at {INPUT_PATH}", file=sys.stderr)
+        return 1
+
+    print(f"Reading sample slope image: {INPUT_PATH}")
+    with open(INPUT_PATH, "rb") as f:
+        b64 = base64.b64encode(f.read()).decode("ascii")
 
     payload = {
         "image": b64,
@@ -84,14 +74,14 @@ def main() -> int:
         method="POST",
     )
     try:
-        with urllib.request.urlopen(req, timeout=60) as resp:
+        with urllib.request.urlopen(req, timeout=120) as resp:
             body = json.loads(resp.read())
+    except urllib.error.HTTPError as err:
+        print(f"ERROR: HTTP {err.code}: {err.read().decode('utf-8', 'replace')}", file=sys.stderr)
+        return 1
     except urllib.error.URLError as err:
         print(f"ERROR: could not reach {API_URL}: {err}", file=sys.stderr)
         print("Is the backend running? See README for setup.", file=sys.stderr)
-        return 1
-    except urllib.error.HTTPError as err:
-        print(f"ERROR: HTTP {err.code}: {err.read().decode('utf-8', 'replace')}", file=sys.stderr)
         return 1
 
     population = body.get("population", [])
@@ -100,13 +90,13 @@ def main() -> int:
         print(f"  W{i}: {pct:6.2f}%")
 
     out_b64 = body.get("image", "")
-    if out_b64:
-        with open(OUTPUT_PATH, "wb") as f:
-            f.write(base64.b64decode(out_b64))
-        print(f"\nFalse-colour output written to: {OUTPUT_PATH}")
-    else:
-        print("\nWARNING: no image returned in response.", file=sys.stderr)
+    if not out_b64:
+        print("\nERROR: no image returned in response.", file=sys.stderr)
         return 2
+
+    with open(OUTPUT_PATH, "wb") as f:
+        f.write(base64.b64decode(out_b64))
+    print(f"\nFalse-colour output written to: {OUTPUT_PATH}")
 
     print("\nQuick-test PASSED.")
     return 0

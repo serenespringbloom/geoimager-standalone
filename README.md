@@ -68,37 +68,39 @@ Then open <http://localhost:3000>. The root path redirects to
 
 ## Running the quick-test
 
-The quick-test generates a synthetic slope image (a colour gradient from fresh
-to weathered), submits it through the full pipeline, and writes the
-false-colour output.
+The quick-test reads the bundled sample slope photograph
+(`examples/slope_sample.png`), submits it through the full pipeline, and
+writes the false-colour classification output.
+
+No third-party Python packages are required — the script uses only the
+standard library.
 
 ```bash
 # With the API running in Shell 1:
-pip install pillow
 python examples/quick_test.py
 ```
 
 Expected output:
 
 ```
-Generating synthetic slope image ...
+Reading sample slope image: examples/slope_sample.png
 POST http://localhost:8787/methods/geoimager
 
 Grade population (%):
-  W1:  20.xx%
-  W2:  20.xx%
-  W3:  20.xx%
-  W4:  20.xx%
-  W5:  20.xx%
+  W1:  xx.xx%
+  W2:  xx.xx%
+  W3:  xx.xx%
+  W4:  xx.xx%
+  W5:  xx.xx%
 
-False-colour output written to: examples/output_synthetic.png
+False-colour output written to: examples/output_sample.png
 
 Quick-test PASSED.
 ```
 
-Success criteria: (a) HTTP 200 response, (b) all grades appear in the output,
-(c) `output_synthetic.png` shows a left-to-right progression from W1 (freshest)
-to W6 (most weathered) colours.
+Success criteria: (a) HTTP 200 response, (b) percentages sum to ~100%,
+(c) `output_sample.png` is written and shows a false-colour heatmap
+classifying the sample slope's weathering grades.
 
 See [`examples/README.md`](examples/README.md) for details.
 
