@@ -22,12 +22,12 @@ function toResponse(r: PresetRow) {
 }
 
 export function registerPresetRoutes(app: Hono) {
-  app.get("/methods/geoimager-presets", (c) => {
+  app.get("/methods/cvedm-presets", (c) => {
     try {
       const type = c.req.query("type");
       const stmt = type
-        ? db.prepare("SELECT * FROM geoimager_presets WHERE type = ? ORDER BY created_at DESC")
-        : db.prepare("SELECT * FROM geoimager_presets ORDER BY created_at DESC");
+        ? db.prepare("SELECT * FROM cvedm_presets WHERE type = ? ORDER BY created_at DESC")
+        : db.prepare("SELECT * FROM cvedm_presets ORDER BY created_at DESC");
       const rows = (type ? stmt.all(type) : stmt.all()) as PresetRow[];
       return c.json(rows.map(toResponse), 200);
     } catch (err) {
@@ -35,7 +35,7 @@ export function registerPresetRoutes(app: Hono) {
     }
   });
 
-  app.post("/methods/geoimager-presets", async (c) => {
+  app.post("/methods/cvedm-presets", async (c) => {
     try {
       const body = await c.req.json() as {
         name: string;
@@ -48,11 +48,11 @@ export function registerPresetRoutes(app: Hono) {
       }
       const info = db
         .prepare(
-          "INSERT INTO geoimager_presets (name, type, data, created_by_name) VALUES (?, ?, ?, ?)",
+          "INSERT INTO cvedm_presets (name, type, data, created_by_name) VALUES (?, ?, ?, ?)",
         )
         .run(body.name, body.type, JSON.stringify(body.data), body.createdByName ?? "");
       const row = db
-        .prepare("SELECT * FROM geoimager_presets WHERE id = ?")
+        .prepare("SELECT * FROM cvedm_presets WHERE id = ?")
         .get(info.lastInsertRowid) as PresetRow;
       return c.json(toResponse(row), 201);
     } catch (err) {
@@ -60,10 +60,10 @@ export function registerPresetRoutes(app: Hono) {
     }
   });
 
-  app.delete("/methods/geoimager-presets/:id", (c) => {
+  app.delete("/methods/cvedm-presets/:id", (c) => {
     try {
       const id = parseInt(c.req.param("id"));
-      db.prepare("DELETE FROM geoimager_presets WHERE id = ?").run(id);
+      db.prepare("DELETE FROM cvedm_presets WHERE id = ?").run(id);
       return c.json({ ok: true }, 200);
     } catch (err) {
       return c.json({ error: err instanceof Error ? err.message : String(err) }, 500);

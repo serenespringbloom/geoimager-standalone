@@ -2,8 +2,8 @@ import "./globals.css";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "GeoImager",
-  description: "Colour-based rock weathering grade classifier",
+  title: "CVEDM",
+  description: "CIELAB Vector Euclidean Distance Metrics — colour-based rock weathering grade classifier",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

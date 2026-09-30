@@ -6,18 +6,18 @@ import { GradeBarChart } from "./grade-bar-chart";
 import { ImageCropper } from "../image-cropper";
 import { ResolutionSelect } from "../resolution-select";
 
-interface GeoImagerResult {
+interface CvedmResult {
   image: string;
   population: number[];
 }
 
 import { DEFAULT_COLOR_SCHEME } from "./color-scheme";
 
-export default function GeoImagerPage() {
+export default function CvedmPage() {
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [imgDims, setImgDims] = useState<{ w: number; h: number } | null>(null);
-  const [result, setResult] = useState<GeoImagerResult | null>(null);
+  const [result, setResult] = useState<CvedmResult | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [dragging, setDragging] = useState(false);
@@ -85,7 +85,7 @@ export default function GeoImagerPage() {
         : await fileToBase64(file, maxDimension ?? undefined);
       const normArray = [...thresholds].reverse();
 
-      const res = await fetch(`${API_URL}/methods/geoimager`, {
+      const res = await fetch(`${API_URL}/methods/cvedm`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -108,7 +108,7 @@ export default function GeoImagerPage() {
         const body = await res.json() as { error?: string };
         throw new Error(body.error ?? `HTTP ${res.status}`);
       }
-      setResult(await res.json() as GeoImagerResult);
+      setResult(await res.json() as CvedmResult);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Processing failed");
     } finally {
@@ -120,7 +120,8 @@ export default function GeoImagerPage() {
     <>
     <div className="max-w-[1400px] mx-auto space-y-6 p-6">
       <div>
-        <h1 className="text-2xl font-bold text-slate-900 tracking-tight">GeoImager</h1>
+        <h1 className="text-2xl font-bold text-slate-900 tracking-tight">CVEDM</h1>
+        <p className="text-xs text-slate-400 mt-0.5">CIELAB Vector Euclidean Distance Metrics</p>
         <p className="text-sm text-slate-500 mt-0.5">
           Upload a slope photograph masked to rock surface, set the fresh rock reference colour, then classify pixels by weathering grade.
         </p>
@@ -471,7 +472,7 @@ function AbInput({ label, a, b, onA, onB, accent }: {
   );
 }
 
-interface GeoImagerPreset {
+interface CvedmPreset {
   id: number;
   name: string;
   type: "reference" | "threshold";
@@ -480,24 +481,24 @@ interface GeoImagerPreset {
   createdAt: string;
 }
 
-async function fetchPresets(type: "reference" | "threshold"): Promise<GeoImagerPreset[]> {
-  const res = await fetch(`${API_URL}/methods/geoimager-presets?type=${type}`);
+async function fetchPresets(type: "reference" | "threshold"): Promise<CvedmPreset[]> {
+  const res = await fetch(`${API_URL}/methods/cvedm-presets?type=${type}`);
   if (!res.ok) throw new Error("Failed to fetch presets");
-  return res.json() as Promise<GeoImagerPreset[]>;
+  return res.json() as Promise<CvedmPreset[]>;
 }
 
-async function savePreset(name: string, type: "reference" | "threshold", data: Record<string, unknown>, createdByName: string): Promise<GeoImagerPreset> {
-  const res = await fetch(`${API_URL}/methods/geoimager-presets`, {
+async function savePreset(name: string, type: "reference" | "threshold", data: Record<string, unknown>, createdByName: string): Promise<CvedmPreset> {
+  const res = await fetch(`${API_URL}/methods/cvedm-presets`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ name, type, data, createdByName }),
   });
   if (!res.ok) throw new Error("Failed to save preset");
-  return res.json() as Promise<GeoImagerPreset>;
+  return res.json() as Promise<CvedmPreset>;
 }
 
 async function deletePreset(id: number): Promise<void> {
-  const res = await fetch(`${API_URL}/methods/geoimager-presets/${id}`, { method: "DELETE" });
+  const res = await fetch(`${API_URL}/methods/cvedm-presets/${id}`, { method: "DELETE" });
   if (!res.ok) throw new Error("Failed to delete preset");
 }
 
@@ -507,7 +508,7 @@ function PresetManager({ type, onLoad, getCurrentData }: {
   getCurrentData: () => Record<string, unknown>;
 }) {
   const [open, setOpen] = useState(false);
-  const [presets, setPresets] = useState<GeoImagerPreset[]>([]);
+  const [presets, setPresets] = useState<CvedmPreset[]>([]);
   const [loading, setLoading] = useState(false);
   const [saveMode, setSaveMode] = useState(false);
   const [saveName, setSaveName] = useState("");

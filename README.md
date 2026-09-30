@@ -1,10 +1,11 @@
-# GeoImager
+# CVEDM — CIELAB Vector Euclidean Distance Metrics
 
 Colour-based rock weathering grade classifier. Given a slope photograph (with
-the rock surface masked), GeoImager converts each pixel to CIELAB colour space,
-measures its ΔE distance from a user-supplied *fresh* reference point, and
-classifies the pixel into one of N weathering grades (W1 = freshest, WN = most
-weathered). Output is a false-colour image and a per-grade population histogram.
+the rock surface masked), CVEDM converts each pixel to CIELAB colour space,
+measures its Euclidean ΔE distance from a user-supplied *fresh* reference
+point, and classifies the pixel into one of N weathering grades
+(W1 = freshest, WN = most weathered). Output is a false-colour image and a
+per-grade population histogram.
 
 This repository contains the source used to produce the results reported in
 the accompanying publication.
@@ -12,11 +13,11 @@ the accompanying publication.
 ## Repository layout
 
 ```
-geoimager-standalone/
+cvedm/
 ├── python-service/      Flask image-processing service — the core algorithm
 │   ├── main.py          CIELAB conversion, ΔE classification, false-colour output
 │   ├── requirements.txt
-│   └── (deployed at https://geoimager-926431461658.asia-southeast1.run.app)
+│   └── (a hosted deployment is used by default; see below)
 ├── api/                 Node.js/Hono API — proxy + preset storage (SQLite)
 │   ├── src/
 │   │   ├── index.ts
@@ -24,7 +25,7 @@ geoimager-standalone/
 │   │   └── db/          SQLite (better-sqlite3, auto-created on first run)
 │   └── package.json
 ├── web/                 Next.js/React frontend
-│   ├── src/app/methods/geoimager/
+│   ├── src/app/methods/cvedm/
 │   │   ├── page.tsx     Main UI
 │   │   ├── color-scheme.ts
 │   │   └── grade-bar-chart.tsx
@@ -41,11 +42,10 @@ geoimager-standalone/
 - Node.js 20+
 
 That is the entire prerequisite list. The image-processing algorithm runs on
-a hosted service at
-<https://geoimager-926431461658.asia-southeast1.run.app>, so reviewers do not
-need to install Python dependencies, Docker, or a database to try the app.
-The full Python source is still included in `python-service/` for inspection
-and self-hosting (see *Optional: self-host the algorithm* below).
+a hosted service, so reviewers do not need to install Python dependencies,
+Docker, or a database to try the app. The full Python source is still
+included in `python-service/` for inspection and optional self-hosting (see
+*Optional: self-host the algorithm* below).
 
 ## Quick start
 
@@ -63,9 +63,9 @@ cd web && npm install && npm run dev
 ```
 
 Then open <http://localhost:3000>. The root path redirects to
-`/methods/geoimager`.
+`/methods/cvedm`.
 
-## Example / quick-test
+## Example run
 
 A real slope photograph is bundled at `examples/slope_sample.png` so reviewers
 can exercise the full pipeline end-to-end through the web interface.
@@ -85,8 +85,6 @@ percentages sum to ~100%.
 
 Full step-by-step and expected output: see [`examples/README.md`](examples/README.md).
 
-See [`examples/README.md`](examples/README.md) for details.
-
 ## Using the web interface
 
 1. Open <http://localhost:3000>.
@@ -102,11 +100,11 @@ See [`examples/README.md`](examples/README.md) for details.
 
 Presets (reference points, threshold sets) can be saved and reloaded from each
 configuration card. Presets are stored in a local SQLite file at
-`api/data/geoimager.sqlite` (auto-created).
+`api/data/cvedm.sqlite` (auto-created).
 
 ## API contract
 
-### `POST /methods/geoimager`
+### `POST /methods/cvedm`
 
 Body (all fields required):
 
@@ -136,7 +134,7 @@ Response:
 }
 ```
 
-### `GET/POST/DELETE /methods/geoimager-presets`
+### `GET/POST/DELETE /methods/cvedm-presets`
 
 CRUD for saved presets. `type` is either `"reference"` (a\*b\* fresh/weathered
 pairs) or `"threshold"` (level count + normalisation thresholds).
@@ -152,7 +150,7 @@ python main.py                       # serves at http://localhost:8080
 
 # Then in Shell 1, point the API at your local instance:
 cd api
-GEOIMAGER_URL=http://localhost:8080 npm run dev
+ALGORITHM_URL=http://localhost:8080 npm run dev
 ```
 
 The Python service exposes `POST /process_image_v2` with the same body/response
