@@ -50,8 +50,8 @@ included in `python-service/` for inspection and optional self-hosting (see
 ## Quick start
 
 ```bash
-git clone https://github.com/serenespringbloom/geoimager-standalone.git
-cd geoimager-standalone
+git clone https://github.com/serenespringbloom/CIELAB_Vector_Euclidean_Distance_Metrics.git
+cd CIELAB_Vector_Euclidean_Distance_Metrics
 
 # Shell 1 — API (uses local SQLite, proxies image jobs to hosted algorithm)
 cd api && npm install && npm run dev
