@@ -1,11 +1,10 @@
 import type { Hono } from "hono";
 
+const DEFAULT_GEOIMAGER_URL = "https://geoimager-926431461658.asia-southeast1.run.app";
+
 export function registerGeoImagerRoutes(app: Hono) {
   app.post("/methods/geoimager", async (c) => {
-    const geoimagerUrl = process.env.GEOIMAGER_URL;
-    if (!geoimagerUrl) {
-      return c.json({ error: "GeoImager service not configured" }, 503);
-    }
+    const geoimagerUrl = process.env.GEOIMAGER_URL ?? DEFAULT_GEOIMAGER_URL;
 
     const contentType = c.req.header("Content-Type") ?? "";
     if (!contentType.includes("application/json")) {

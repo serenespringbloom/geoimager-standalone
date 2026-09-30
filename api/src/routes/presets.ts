@@ -1,33 +1,35 @@
 import type { Hono } from "hono";
-import { pool } from "../db/client.js";
+import { db } from "../db/client.js";
+
+interface PresetRow {
+  id: number;
+  name: string;
+  type: string;
+  data: string;
+  created_by_name: string;
+  created_at: string;
+}
+
+function toResponse(r: PresetRow) {
+  return {
+    id: r.id,
+    name: r.name,
+    type: r.type,
+    data: JSON.parse(r.data),
+    createdByName: r.created_by_name,
+    createdAt: r.created_at,
+  };
+}
 
 export function registerPresetRoutes(app: Hono) {
-  app.get("/methods/geoimager-presets", async (c) => {
+  app.get("/methods/geoimager-presets", (c) => {
     try {
       const type = c.req.query("type");
-      const params: string[] = [];
-      let where = "";
-      if (type) {
-        where = "WHERE type = $1";
-        params.push(type);
-      }
-      const { rows } = await pool.query(
-        `SELECT id, name, type, data, created_by_name, created_at
-         FROM geoimager_presets ${where}
-         ORDER BY created_at DESC`,
-        params,
-      );
-      return c.json(
-        rows.map((r) => ({
-          id: r.id,
-          name: r.name,
-          type: r.type,
-          data: r.data,
-          createdByName: r.created_by_name,
-          createdAt: r.created_at,
-        })),
-        200,
-      );
+      const stmt = type
+        ? db.prepare("SELECT * FROM geoimager_presets WHERE type = ? ORDER BY created_at DESC")
+        : db.prepare("SELECT * FROM geoimager_presets ORDER BY created_at DESC");
+      const rows = (type ? stmt.all(type) : stmt.all()) as PresetRow[];
+      return c.json(rows.map(toResponse), 200);
     } catch (err) {
       return c.json({ error: err instanceof Error ? err.message : String(err) }, 500);
     }
@@ -44,30 +46,24 @@ export function registerPresetRoutes(app: Hono) {
       if (!body.name || !body.type || body.data == null) {
         return c.json({ error: "name, type and data are required" }, 400);
       }
-      const { rows } = await pool.query(
-        `INSERT INTO geoimager_presets (name, type, data, created_by_name)
-         VALUES ($1, $2, $3, $4)
-         RETURNING id, name, type, data, created_by_name, created_at`,
-        [body.name, body.type, JSON.stringify(body.data), body.createdByName ?? ""],
-      );
-      const r = rows[0];
-      return c.json({
-        id: r.id,
-        name: r.name,
-        type: r.type,
-        data: r.data,
-        createdByName: r.created_by_name,
-        createdAt: r.created_at,
-      }, 201);
+      const info = db
+        .prepare(
+          "INSERT INTO geoimager_presets (name, type, data, created_by_name) VALUES (?, ?, ?, ?)",
+        )
+        .run(body.name, body.type, JSON.stringify(body.data), body.createdByName ?? "");
+      const row = db
+        .prepare("SELECT * FROM geoimager_presets WHERE id = ?")
+        .get(info.lastInsertRowid) as PresetRow;
+      return c.json(toResponse(row), 201);
     } catch (err) {
       return c.json({ error: err instanceof Error ? err.message : String(err) }, 500);
     }
   });
 
-  app.delete("/methods/geoimager-presets/:id", async (c) => {
+  app.delete("/methods/geoimager-presets/:id", (c) => {
     try {
       const id = parseInt(c.req.param("id"));
-      await pool.query("DELETE FROM geoimager_presets WHERE id = $1", [id]);
+      db.prepare("DELETE FROM geoimager_presets WHERE id = ?").run(id);
       return c.json({ ok: true }, 200);
     } catch (err) {
       return c.json({ error: err instanceof Error ? err.message : String(err) }, 500);

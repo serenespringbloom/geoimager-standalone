@@ -1,7 +1,24 @@
-import pg from "pg";
+import Database from "better-sqlite3";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
+import { mkdirSync } from "node:fs";
 
-const { Pool } = pg;
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const dataDir = process.env.DATA_DIR ?? join(__dirname, "../../data");
+mkdirSync(dataDir, { recursive: true });
 
-export const pool = new Pool({
-  connectionString: process.env.DATABASE_URL ?? "postgres://geoimager:geoimager@localhost:5432/geoimager",
-});
+export const db = new Database(join(dataDir, "geoimager.sqlite"));
+db.pragma("journal_mode = WAL");
+
+db.exec(`
+  CREATE TABLE IF NOT EXISTS geoimager_presets (
+    id              INTEGER PRIMARY KEY AUTOINCREMENT,
+    name            TEXT NOT NULL,
+    type            TEXT NOT NULL,
+    data            TEXT NOT NULL,
+    created_by_name TEXT NOT NULL DEFAULT '',
+    created_at      TEXT NOT NULL DEFAULT (datetime('now'))
+  );
+  CREATE INDEX IF NOT EXISTS geoimager_presets_type_idx ON geoimager_presets(type);
+  CREATE INDEX IF NOT EXISTS geoimager_presets_created_at_idx ON geoimager_presets(created_at DESC);
+`);
