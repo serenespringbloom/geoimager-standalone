@@ -30,8 +30,8 @@ geoimager-standalone/
 │   │   └── grade-bar-chart.tsx
 │   └── package.json
 ├── examples/
-│   ├── quick_test.py    End-to-end smoke test with a synthetic image
-│   └── README.md
+│   ├── slope_sample.png Real slope photograph fixture
+│   └── README.md        Step-by-step example run using the sample
 ├── LICENSE              MIT
 └── README.md
 ```
@@ -39,7 +39,6 @@ geoimager-standalone/
 ## Prerequisites
 
 - Node.js 20+
-- Python 3.9+ (only needed to run the quick-test; not needed to use the app)
 
 That is the entire prerequisite list. The image-processing algorithm runs on
 a hosted service at
@@ -66,53 +65,25 @@ cd web && npm install && npm run dev
 Then open <http://localhost:3000>. The root path redirects to
 `/methods/geoimager`.
 
-## Running the quick-test
+## Example / quick-test
 
-The quick-test reads the bundled sample slope photograph
-(`examples/slope_sample.png`), submits it through the full pipeline, and
-writes the false-colour classification output.
+A real slope photograph is bundled at `examples/slope_sample.png` so reviewers
+can exercise the full pipeline end-to-end through the web interface.
 
-No third-party Python packages are required — the script uses only the
-standard library.
+With both servers running (see *Quick start* above):
 
-```bash
-# With the API running in Shell 1:
-python examples/quick_test.py
-```
+1. Open <http://localhost:3000>.
+2. Upload `examples/slope_sample.png`.
+3. Set **Fresh** reference a\*=0, b\*=0 and **Weathered** reference a\*=4, b\*=20.
+4. Set **No. of levels** to 6.
+5. Enter **Normalisation thresholds** T1..T5 as 0.17, 0.33, 0.50, 0.67, 0.83.
+6. Click **Process Image**.
 
-Expected output:
+Expected result: the right-hand panel shows a false-colour weathering
+classification of the sample slope plus a per-grade histogram (W1..W6) whose
+percentages sum to ~100%.
 
-```
-Reading sample slope image: examples/slope_sample.png
-POST http://localhost:8787/methods/geoimager
-
-Grade population (%):
-  W1:  xx.xx%
-  W2:  xx.xx%
-  W3:  xx.xx%
-  W4:  xx.xx%
-  W5:  xx.xx%
-
-False-colour output written to: examples/output_sample.png
-
-Quick-test PASSED.
-```
-
-Success criteria: (a) HTTP 200 response, (b) percentages sum to ~100%,
-(c) `output_sample.png` is written and shows a false-colour heatmap
-classifying the sample slope's weathering grades.
-
-The quick-test uses the following recommended parameter defaults for the
-bundled sample:
-
-| Parameter                      | Value                          |
-|--------------------------------|--------------------------------|
-| Fresh reference (a\*, b\*)     | (0, 0)                         |
-| Weathered reference (a\*, b\*) | (4, 20)                        |
-| Levels                         | 6                              |
-| Normalisation thresholds       | 0.17, 0.33, 0.50, 0.67, 0.83   |
-
-Use the same values in the web UI to reproduce the quick-test output.
+Full step-by-step and expected output: see [`examples/README.md`](examples/README.md).
 
 See [`examples/README.md`](examples/README.md) for details.
 
