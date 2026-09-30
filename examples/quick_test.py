@@ -51,16 +51,20 @@ def main() -> int:
     with open(INPUT_PATH, "rb") as f:
         b64 = base64.b64encode(f.read()).decode("ascii")
 
+    # Reference points and thresholds matching the recommended defaults for
+    # the bundled slope sample. Fresh reference: a*=0, b*=0. Weathered
+    # reference: a*=4, b*=20. Six weathering levels with equally spaced
+    # normalisation thresholds (0.17, 0.33, 0.50, 0.67, 0.83).
     payload = {
         "image": b64,
         "unweathered_a_threshold": 0,
         "unweathered_b_threshold": 0,
         "unweathered_l_threshold": 0,
-        "a_threshold": 20,
+        "a_threshold": 4,
         "b_threshold": 20,
         "l_threshold": 0,
-        "levels": 5,
-        "normalization_levels": [0.8, 0.6, 0.4, 0.2],
+        "levels": 6,
+        "normalization_levels": [0.83, 0.67, 0.5, 0.33, 0.17],
         "color_scheme": DEFAULT_COLOR_SCHEME,
         "ignored_range": [],
         "ignored_color": [0, 0, 0, 0],

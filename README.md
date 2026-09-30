@@ -102,6 +102,18 @@ Success criteria: (a) HTTP 200 response, (b) percentages sum to ~100%,
 (c) `output_sample.png` is written and shows a false-colour heatmap
 classifying the sample slope's weathering grades.
 
+The quick-test uses the following recommended parameter defaults for the
+bundled sample:
+
+| Parameter                      | Value                          |
+|--------------------------------|--------------------------------|
+| Fresh reference (a\*, b\*)     | (0, 0)                         |
+| Weathered reference (a\*, b\*) | (4, 20)                        |
+| Levels                         | 6                              |
+| Normalisation thresholds       | 0.17, 0.33, 0.50, 0.67, 0.83   |
+
+Use the same values in the web UI to reproduce the quick-test output.
+
 See [`examples/README.md`](examples/README.md) for details.
 
 ## Using the web interface

@@ -23,3 +23,22 @@ python examples/quick_test.py
 Expected: HTTP 200 response, per-grade percentages printed to stdout summing
 to ~100%, and `examples/output_sample.png` written with a false-colour heatmap
 overlaying the sample slope.
+
+## Parameters used by the quick-test
+
+The script sends the sample image with the following recommended defaults:
+
+| Parameter                | Value                              |
+|--------------------------|------------------------------------|
+| Fresh reference (a\*, b\*) | (0, 0)                             |
+| Weathered reference (a\*, b\*) | (4, 20)                        |
+| Number of levels         | 6                                  |
+| Normalisation thresholds | 0.17, 0.33, 0.50, 0.67, 0.83       |
+
+To reproduce the same output from the web UI:
+
+1. Upload `examples/slope_sample.png`.
+2. Set **Fresh** a\*=0, b\*=0 and **Weathered** a\*=4, b\*=20.
+3. Set the number of weathering levels to **6**.
+4. Enter the thresholds T1..T5 as **0.17, 0.33, 0.50, 0.67, 0.83**.
+5. Click **Process Image**.
